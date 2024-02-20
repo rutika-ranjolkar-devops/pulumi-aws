@@ -1,0 +1,7 @@
+name: pulumi-aws
+runtime: nodejs
+description: Provision EKS with Pulumi
+config:
+  pulumi:tags:
+    value:
+      pulumi:template: aws-typescript
