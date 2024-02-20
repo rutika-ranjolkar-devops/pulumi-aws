@@ -3,9 +3,12 @@ import * as awsx from "@pulumi/awsx";
 import * as aws from "@pulumi/aws";
 import { SubnetType } from "@pulumi/awsx/ec2";
 import * as eks from "@pulumi/eks";
+import * as iam from "./iam";
 
 const projectName = pulumi.getProject();
 const tags = { "Status": "Demo", "Project": "pulumi-aws"};
+const node_group_role = iam.createRole("eks-node-group-role-NEW");
+
 
 // Allocate a new VPC with the default settings.
 const vpc = new awsx.ec2.Vpc("eks-vpc", {
@@ -19,6 +22,7 @@ const vpc = new awsx.ec2.Vpc("eks-vpc", {
     subnetStrategy: "Auto",
 });
 
+// Role for EKS cluster
 const eksRole = new aws.iam.Role("eksClusterRole-NEW", {
     assumeRolePolicy: aws.iam.assumeRolePolicyForPrincipal({ Service: "eks.amazonaws.com" }),
 });
@@ -37,7 +41,6 @@ const eksAmazonEKSVPCResourceControllerPolicyAttachment = new aws.iam.RolePolicy
 
 const cluster = new eks.Cluster(`${projectName}`, {
     vpcId: vpc.vpcId,
-    publicSubnetIds: vpc.publicSubnetIds,
     privateSubnetIds: vpc.privateSubnetIds,
     createOidcProvider: true,
     roleMappings: [{
@@ -46,24 +49,29 @@ const cluster = new eks.Cluster(`${projectName}`, {
             username: "admin",
         }],
         serviceRole: eksRole,
-        endpointPrivateAccess: true
-        endpointPublicAccess: false
 
     tags,
 });
 
-const managedNodeGroup = eks.createManagedNodeGroup("${projectName}-ng", {
-    cluster: cluster,
-    nodeGroupName: "${projectName}-ng",
-    scalingConfig: {
-        desiredSize: 1,
-        minSize: 1,
-        maxSize: 2,
-    },
-    instanceTypes: ["t3.medium"],
-    labels: {"ondemand": "true"},
-    tags
-}, cluster);
+const instanceProfile = new aws.iam.InstanceProfile("InstanceProfile", {
+    role: node_group_role,
+});
+
+const selfManagedNodeGroup = new eks.NodeGroup("self-managed-nodegroup", {
+    cluster: cluster.core,
+    instanceType: "t3.medium",
+    desiredCapacity: 2,
+    minSize: 1,
+    maxSize: 3,
+    labels: { "on-demand": "true" },
+    instanceProfile: instanceProfile,
+});
+
+// Create a new ECR repository
+const repo = new aws.ecr.Repository("myRepository", {});
+
+// Export the repository URL to be used in future steps such as pushing a Docker image
+export const repositoryUrl = repo.repositoryUrl;
 
 
 // Export the cluster kubeconfig.
