@@ -81,20 +81,30 @@ const provider = new k8s.Provider("eks-k8s", {
 });
 
 // Create a namespace.
-const appsNamespace = new k8s.core.v1.Namespace("apps", undefined, {provider: provider});
-export const appsNamespaceName = appsNamespace.metadata.name;
+//const appsNamespace = new k8s.core.v1.Namespace("apps", undefined, {provider: provider});
+//export const appsNamespaceName = appsNamespace.metadata.name;
 
+const appsNamespaceName = "kube-system"
 // Create the new IAM policy for the Service Account using the
 // AssumeRoleWebWebIdentity action.
-const saName = "serviceAccount";
+const saName = "air-tek-sa";
 const saAssumeRolePolicy = pulumi.all([clusterOidcProviderUrl, clusterOidcProvider.arn, appsNamespaceName]).apply(([url, arn, namespace]) => aws.iam.getPolicyDocument({
     statements: [{
         actions: ["sts:AssumeRoleWithWebIdentity"],
-        conditions: [{
+        conditions: [
+        {
             test: "StringEquals",
-            values: [`system:serviceaccount:${namespace}:${saName}`],
+            values: [`system:serviceaccount:${namespace}:${saName}`,],
             variable: `${url.replace("https://", "")}:sub`,
-        }],
+
+        },
+        {
+            test: "StringEquals",
+            values: [`sts.amazonaws.com`],
+            variable: `${url.replace("https://", "")}:aud`,
+
+        }
+        ],
         effect: "Allow",
         principals: [{
             identifiers: [arn],
