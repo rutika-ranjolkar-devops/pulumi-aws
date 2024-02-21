@@ -21,7 +21,7 @@ spec:
     spec:
       containers:
         - name: infra-web
-          image: {{ infra-web image }}
+          image: rutikaaraokar/at-demo:infraweb-amd64
           env:
             - name: ApiAddress
               value: "infra-api.default.svc.cluster.local:5000/WeatherForecast"
