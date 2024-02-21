@@ -5,8 +5,8 @@ metadata:
   name: infra-web
 spec:
   ports:
-    - port: 3000
-      protocol: TCP
-  type: ClusterIP
+    - port: 80
+      targetPort: 3000
+  type: NodePort
   selector:
     role: web

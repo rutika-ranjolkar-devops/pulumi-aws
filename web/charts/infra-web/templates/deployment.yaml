@@ -21,7 +21,10 @@ spec:
     spec:
       containers:
         - name: infra-web
-          image: rutikaaraokar/demo-app:infraweb
-          imagePullPolicy: Always
+          image: {{ infra-web image }}
+          env:
+            - name: ApiAddress
+              value: "infra-api.default.svc.cluster.local:5000/WeatherForecast"
+          imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 3000

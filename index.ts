@@ -10,7 +10,7 @@ import { LBControllerPolicy } from "./iamPolicy";
 
 const projectName = pulumi.getProject();
 const tags = { "Status": "Demo", "Project": "pulumi-aws"};
-const node_group_role = iam.createRole("eks-node-group-role-NEW");
+const node_group_role = iam.createRole("EKS-NG-Role-AT");
 
 // Allocate a new VPC with the default settings.
 const vpc = new awsx.ec2.Vpc("eks-vpc", {
@@ -25,7 +25,7 @@ const vpc = new awsx.ec2.Vpc("eks-vpc", {
 });
 
 // Role for EKS cluster
-const eksRole = new aws.iam.Role("eksClusterRole-NEW", {
+const eksRole = new aws.iam.Role("EKS-Cluster-Role-AT", {
     assumeRolePolicy: aws.iam.assumeRolePolicyForPrincipal({ Service: "eks.amazonaws.com" }),
 });
 
@@ -33,7 +33,6 @@ const eksPolicyAttachment = new aws.iam.RolePolicyAttachment("eksPolicyAttachmen
     role: eksRole.name,
     policyArn: "arn:aws:iam::aws:policy/AmazonEKSClusterPolicy",
 });
-
 
 const eksAmazonEKSVPCResourceControllerPolicyAttachment = new aws.iam.RolePolicyAttachment("eksAmazonEKSVPCResourceControllerPolicyAttachment", {
     role: eksRole.name,
@@ -149,8 +148,6 @@ const repo = new aws.ecr.Repository("myrepository", {});
 // Install the AWS Load Balancer Controller.
 // Install a specific version compatible with our EKS cluster version.
 const awsLoadBalancerControllerVersion = "1.7.1";
-
-
 
 // Install the Helm chart for the AWS Load Balancer Controller.
 const chart = new k8s.helm.v3.Chart("aws-loadbalancer-controller", {

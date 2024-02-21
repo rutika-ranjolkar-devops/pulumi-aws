@@ -21,7 +21,7 @@ spec:
     spec:
       containers:
         - name: infra-api
-          image: rutikaaraokar/demo-app:infraapi
-          imagePullPolicy: Always
+          image: {{ infra-api image }}
+          imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 5000
